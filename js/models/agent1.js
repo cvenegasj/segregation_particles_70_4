@@ -4,9 +4,10 @@ class Agent1 {
         var options = {
             friction: 0,
             frictionAir: 0,
-            restitution: 0.1,
-            inertia: Infinity,
-            inverseInertia: 0
+            frictionStatic: 0,
+            restitution: 0.80,
+            inertia: Infinity
+            //inverseInertia: 0
         };
         this.body = Bodies.circle(positionX, positionY, diameter/2, options);
         Body.setVelocity(this.body, {x: random(-3, 3), y: random(-3, 3)}); // initial velocity
@@ -51,7 +52,10 @@ class Agent1 {
 
         // update acceleration
         if (this.groupIdentity.name == target.groupIdentity.name) {
-            Body.applyForce(this.body, {x: this.body.position.x, y: this.body.position.y}, {x: force.x, y: force.y});
+            // Only attract if target is not too close (to avoid excessive force within clusters).
+            if (dist > 2 * this.diameter) {
+                Body.applyForce(this.body, {x: this.body.position.x, y: this.body.position.y}, {x: force.x, y: force.y});
+            }
         } else {
             Body.applyForce(this.body, {x: this.body.position.x, y: this.body.position.y}, {x: -force.x, y: -force.y});
         }

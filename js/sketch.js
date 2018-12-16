@@ -7,31 +7,54 @@ var Engine = Matter.Engine,
     Body = Matter.Body;
 var engine;
 
-let canvasWidth = 640;
-let canvasHeight = 480;
+var canvasWidth;
+var canvasHeight;
 // input parameters
-let nAgents = 70;
-let nGroupIdentities = 4; // max 5
-let maxSimilarityWanted = 0.5;
-let maxDifferenceWanted = 0.3;
+var nAgents; // # particles
+var nGroupIdentities; // # colors (max 5)
+var maxSimilarityWanted = 0.5;
+var maxDifferenceWanted = 0.3;
 // model variables
-let agents = [];
-let groupIdentities = [];
+var agents = [];
+var groupIdentities = [];
 
 // visualization variables
-let agentDiameter = 10;
+var agentDiameter = 10;
 
 var leftBound, rightBound, topBound, bottomBound;
 
 function setup() {
     // data
-    groupIdentities = [ // all possible group identities
+    /*groupIdentities = [ // colors fire
         {name: "A", color: color(255, 233, 0, 255)}, // (R, G, B, Alpha)
         {name: "B", color: color(255, 0, 125, 255)},
         {name: "C", color: color(255, 117, 0, 255)},
         {name: "D", color: color(255, 50, 12, 255)},
         {name: "E", color: color(255, 180, 0, 255)}
+    ];*/
+    groupIdentities = [ // all possible group identities
+        {name: "A", color: color(115, 244, 255, 255)}, // cyan
+        {name: "B", color: color(255, 0, 83, 255)}, // red
+        {name: "C", color: color(255, 238, 0, 255)}, // yellow
+        {name: "D", color: color(255, 20, 171, 255)}, // pink
+        {name: "E", color: color(88, 255, 21, 255)} // green
     ];
+    // parameters from URL
+    let params = getURLParams();
+    // if no URL parameters were provided
+    if (Object.keys(params).length === 0 && params.constructor === Object) {
+        nAgents = 70;
+        nGroupIdentities = 4;
+    } else {
+        nAgents = parseInt(params.agents);
+        nGroupIdentities = parseInt(params.colors);
+        if (nGroupIdentities > 5) {
+            nGroupIdentities = 5;
+        }
+    }
+
+    canvasWidth = window.innerWidth;
+    canvasHeight = window.innerHeight
     createCanvas(canvasWidth, canvasHeight);
     engine = Engine.create();
     engine.world.bounds.min.x = -Infinity;
@@ -40,32 +63,37 @@ function setup() {
     engine.world.bounds.max.y = Infinity;
     // Disable gravity
     engine.world.gravity.scale = 0;
+    //engine.world.gravity.x = 0;
     //engine.world.gravity.y = 0;
 
     // boundaries
-    leftBound = Matter.Bodies.rectangle(0, canvasHeight/2, 30, canvasHeight, {
+    leftBound = Matter.Bodies.rectangle(0, canvasHeight/2, 1, canvasHeight, {
         isStatic: true,
+        restitution: 1,
         render: {
           visible: false
         }
     });
 
-    rightBound = Matter.Bodies.rectangle(canvasWidth, canvasHeight/2, 30, canvasHeight, {
+    rightBound = Matter.Bodies.rectangle(canvasWidth, canvasHeight/2, 1, canvasHeight, {
         isStatic: true,
+        restitution: 1,
         render: {
           visible: false
         }
     });
 
-    bottomBound = Matter.Bodies.rectangle(canvasWidth/2, canvasHeight, canvasWidth, 30, {
+    bottomBound = Matter.Bodies.rectangle(canvasWidth/2, canvasHeight, canvasWidth, 1, {
         isStatic: true,
+        restitution: 1,
         render: {
           visible: false
         }
     });
 
-    topBound = Matter.Bodies.rectangle(canvasWidth/2, 0, canvasWidth, 30, {
+    topBound = Matter.Bodies.rectangle(canvasWidth/2, 0, canvasWidth, 1, {
         isStatic: true,
+        restitution: 1,
         render: {
           visible: false
         }
@@ -90,13 +118,13 @@ function setup() {
 }
 
 function draw() {
-    background(127);
+    background(0);
     // Update Matter.js engine
     Engine.update(engine);
 
     for (let i of agents) {
         for (let j of agents) {
-            if (i != j) {
+            if (i !== j) {
                 i.interact(j);
                 i.show();
             }
@@ -107,10 +135,6 @@ function draw() {
     strokeWeight(1);
     fill(170);
     rectMode(CENTER);
-    //rect(leftBound.position.x, leftBound.position.y, 20, canvasHeight); 
-    //rect(rightBound.position.x, rightBound.position.y, 20, canvasHeight); 
-    //rect(topBound.position.x, topBound.position.y, canvasWidth, 20); 
-    //rect(bottomBound.position.x, bottomBound.position.y, canvasWidth, 20);
 }
 
 
@@ -131,3 +155,14 @@ function containedInCanvas(point) {
     }
     return true;
 }
+
+function windowResized() {
+    canvasWidth = window.innerWidth;
+    canvasHeight = window.innerHeight; 
+    resizeCanvas(canvasWidth, canvasHeight);
+    // update position of boundaries
+    Matter.Body.setPosition(leftBound, {x: -15, y: canvasHeight/2});
+    Matter.Body.setPosition(rightBound, {x: canvasWidth + 15, y: canvasHeight/2});
+    Matter.Body.setPosition(bottomBound, {x: canvasWidth/2, y: canvasHeight + 15});
+    Matter.Body.setPosition(topBound, {x: canvasWidth/2, y: 0 - 15});
+  }
